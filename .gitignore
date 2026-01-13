@@ -1,1 +1,19 @@
 /.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual env
+venv/
+.env
+
+# Generated files
+generated/
+*.pdf
+*.docx
+
+# OS
+.DS_Store

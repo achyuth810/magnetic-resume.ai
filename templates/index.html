@@ -1,52 +1,140 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>MagneticResume.ai — MVP</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 40px; }
-        textarea { width: 100%; height: 180px; margin-bottom: 20px; }
-        button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
-        pre { background: #f4f4f4; padding: 20px; white-space: pre-wrap; }
-        input[type="file"] { margin-bottom: 20px; }
-        .card {
-            background:#f5f7fa;
-            padding:16px;
-            border-radius:6px;
-            margin-top:20px;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MagneticResume.ai</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
 
-    <h1>MagneticResume.ai</h1>
+<body class="min-h-screen bg-gradient-to-b from-sky-50 to-white text-slate-900">
+  <div class="mx-auto max-w-5xl px-6 py-10">
 
-    <form method="POST" enctype="multipart/form-data">
-        <h3>Upload Resume (PDF, Docx)</h3>
-        <input type="file" name="resume_file" accept=".pdf, .docx" required>
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+      <div>
+        <div class="text-2xl font-bold tracking-tight text-sky-700">MagneticResume.ai</div>
+        <div class="text-xs text-slate-500 -mt-0.5">Crafted by Inspire Co.</div>
+      </div>
+    </div>
 
-        <h3>Paste Job Description</h3>
-        <textarea name="jd" placeholder="Paste job description here..." required></textarea>
+    <!-- Card -->
+    <div class="mt-8 rounded-2xl border border-slate-200 bg-white/80 p-6 shadow-sm backdrop-blur">
+      <h1 class="text-xl font-semibold">Resume Enhancer</h1>
+      <p class="mt-1 text-sm text-slate-600">
+        Upload your resume, paste the job description, and download a clean ATS-friendly output.
+      </p>
 
-        <button type="submit">Tailor Resume</button>
-    </form>
+      {% if error %}
+        <div class="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {{ error }}
+        </div>
+      {% endif %}
+
+      <form method="POST" enctype="multipart/form-data" class="mt-6 space-y-5">
+        <!-- Name + Template -->
+        <div class="grid gap-4 md:grid-cols-2">
+          <div>
+            <label class="text-sm font-medium">Your Name (optional)</label>
+            <input
+              name="display_name"
+              placeholder="e.g., Akshitha"
+              class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-4 focus:ring-sky-100"
+            />
+          </div>
+
+          <div>
+            <label class="text-sm font-medium">Choose Template</label>
+            <select
+              name="template"
+              required
+              class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-4 focus:ring-sky-100"
+            >
+              <option value="ATS_CLASSIC">ATS Classic</option>
+              <option value="ATS_BLUE">ATS Blue</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Upload -->
+        <div>
+          <label class="text-sm font-medium">Upload Resume (PDF / DOCX)</label>
+          <input
+            type="file"
+            name="resume_file"
+            accept=".pdf,.docx"
+            required
+            class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+          />
+        </div>
+
+        <!-- JD -->
+        <div>
+          <label class="text-sm font-medium">Job Description</label>
+          <textarea
+            name="jd"
+            required
+            placeholder="Paste the job description here..."
+            class="mt-2 h-44 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-4 focus:ring-sky-100"
+          ></textarea>
+        </div>
+
+        <!-- Submit -->
+        <button
+          type="submit"
+          class="w-full rounded-xl bg-gradient-to-r from-sky-600 to-blue-700 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:opacity-95 active:scale-[0.99]"
+        >
+          Tailor Resume
+        </button>
+      </form>
+    </div>
 
     {% if before_score is not none and after_score is not none %}
-        <hr>
-        <h2>Resume Alignment Summary</h2>
-
-        <div class="card">
-            <p><strong>Before Alignment:</strong> {{ before_score }}%</p>
-            <p><strong>After Alignment:</strong> {{ after_score }}%</p>
-            <p><strong>Improvement:</strong> {{ delta }}%</p>
-            <p><strong>Confidence Level:</strong> {{ confidence }}</p>
+      <div class="mt-6 grid gap-4 md:grid-cols-4">
+        <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div class="text-xs text-slate-500">Before</div>
+          <div class="mt-1 text-2xl font-bold text-slate-900">{{ before_score }}%</div>
         </div>
+        <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div class="text-xs text-slate-500">After</div>
+          <div class="mt-1 text-2xl font-bold text-slate-900">{{ after_score }}%</div>
+        </div>
+        <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div class="text-xs text-slate-500">Improvement</div>
+          <div class="mt-1 text-2xl font-bold text-slate-900">{{ delta }}%</div>
+        </div>
+        <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div class="text-xs text-slate-500">Confidence</div>
+          <div class="mt-1 text-2xl font-bold text-slate-900">{{ confidence }}</div>
+        </div>
+      </div>
     {% endif %}
 
     {% if output %}
-        <hr>
-        <h2>Tailored Resume</h2>
-        <pre>{{ output }}</pre>
+      <div class="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <h2 class="text-lg font-semibold">Tailored Resume Output</h2>
+
+          <div class="flex gap-2">
+            <a
+              href="/download/pdf"
+              class="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+            >
+              Download PDF
+            </a>
+            <a
+              href="/download/docx"
+              class="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-slate-50"
+            >
+              Download DOCX
+            </a>
+          </div>
+        </div>
+
+        <pre class="mt-4 whitespace-pre-wrap rounded-xl bg-slate-50 p-4 text-sm leading-relaxed text-slate-800 border border-slate-200">{{ output }}</pre>
+      </div>
     {% endif %}
 
+  </div>
 </body>
 </html>
