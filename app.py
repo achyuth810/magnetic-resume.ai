@@ -12,16 +12,17 @@ from utils.docx_reader import extract_text_from_docx
 from utils.alignment import alignment_facts
 from utils.pdf_writer import write_resume_pdf
 from utils.docx_writer import write_resume_docx
+from utils.templates import get_template   # Make sure this import works
 
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev-secret-change-me")  # change later
+app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev-secret-change-me")
 
 # Gemini
 API_KEY = os.getenv("GOOGLE_API_KEY")
 if not API_KEY:
-    raise RuntimeError("GOOGLE_API_KEY missing. Put it in .env as GOOGLE_API_KEY=...")
+    raise RuntimeError("GOOGLE_API_KEY missing.")
 
 genai.configure(api_key=API_KEY)
 model = genai.GenerativeModel("models/gemini-flash-latest")
@@ -37,18 +38,12 @@ def extract_resume_text(file_storage):
 
 
 def clean_output(text: str) -> str:
-    """Strong cleanup: remove markdown, tables, stray symbols."""
     if not text:
         return ""
-
-    text = re.sub(r"^\s{0,3}#{1,6}\s*", "", text, flags=re.MULTILINE)  # headings
+    text = re.sub(r"^\s{0,3}#{1,6}\s*", "", text, flags=re.MULTILINE)
     text = text.replace("**", "").replace("__", "").replace("`", "")
-    text = re.sub(r"^\s*\|.*\|\s*$", "", text, flags=re.MULTILINE)  # remove table rows
-
-    # bullets -> hyphen
+    text = re.sub(r"^\s*\|.*\|\s*$", "", text, flags=re.MULTILINE)
     text = re.sub(r"^\s*[•*]\s+", "- ", text, flags=re.MULTILINE)
-
-    # collapse extra blank lines
     text = re.sub(r"\n{3,}", "\n\n", text).strip()
     return text
 
@@ -77,12 +72,13 @@ def index():
     if request.method == "POST":
         jd_text = (request.form.get("jd") or "").strip()
         resume_file = request.files.get("resume_file")
-
         display_name = (request.form.get("display_name") or "").strip()
         name_slug = safe_filename(display_name) if display_name else "guest"
 
-        template = request.form.get("template", "ATS_CLASSIC")  # <-- NEW
-        if template not in ("ATS_CLASSIC", "ATS_BLUE"):
+        # Updated: Support all 4 templates
+        valid_templates = {"ATS_CLASSIC", "ATS_BLUE", "ATS_MINIMAL", "ATS_MODERN"}
+        template = request.form.get("template", "ATS_CLASSIC")
+        if template not in valid_templates:
             template = "ATS_CLASSIC"
 
         if not jd_text:
@@ -103,7 +99,7 @@ STRICT RULES:
 - Do NOT add fake experience
 - Do NOT add new companies, tools, skills, certifications
 - Do NOT change dates, titles, locations
-- Output must be PLAIN TEXT ONLY (no markdown, no **, no ##, no tables)
+- Output must be PLAIN TEXT ONLY
 
 FORMATTING RULES:
 - Use ALL CAPS for section titles (SUMMARY, EXPERIENCE, EDUCATION, SKILLS, CERTIFICATIONS)
@@ -128,10 +124,9 @@ Rewrite the resume to better align to the job description while staying truthful
                 delta = after_score - before_score
                 confidence = confidence_label(delta)
 
-                # store for download routes
                 session["last_output"] = output
                 session["name_slug"] = name_slug
-                session["template"] = template  # <-- NEW
+                session["template"] = template
 
             except Exception as e:
                 error = f"Error: {str(e)}"
@@ -157,13 +152,10 @@ def download_pdf():
     template = session.get("template", "ATS_CLASSIC")
 
     filename = f"{name_slug}.pdf"
-
     tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
     tmp.close()
 
-    # Pass template into your writer
     write_resume_pdf(text, tmp.name, title="TAILORED RESUME", template=template)
-
     return send_file(tmp.name, as_attachment=True, download_name=filename)
 
 
@@ -177,13 +169,10 @@ def download_docx():
     template = session.get("template", "ATS_CLASSIC")
 
     filename = f"{name_slug}.docx"
-
     tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".docx")
     tmp.close()
 
-    # Pass template into your writer
     write_resume_docx(text, tmp.name, title="TAILORED RESUME", template=template)
-
     return send_file(tmp.name, as_attachment=True, download_name=filename)
 
 
